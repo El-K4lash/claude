@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
-"""Copy a branch's content into a preview folder, generating a landing
-page that lists the available HTML pages when no index.html exists at
-the copied root (branches don't share a common site layout)."""
+"""Copy a branch's content into a preview folder. If the branch has no
+index.html at its root (branches don't share a common site layout), this
+either redirects straight to the single site found in a subfolder, or
+lists every HTML page so the right one can be picked manually."""
 import os
 import shutil
 import sys
 
 EXCLUDE = {'.git', '.github', '.claude', '.agents', '_site', 'node_modules'}
+
+REDIRECT_TEMPLATE = """<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0; url={target}">
+<link rel="canonical" href="{target}">
+<title>Redirection…</title>
+</head>
+<body>
+<p>Redirection vers <a href="{target}">{target}</a>…</p>
+</body>
+</html>
+"""
 
 LANDING_TEMPLATE = """<!DOCTYPE html>
 <html lang="fr">
@@ -49,6 +64,21 @@ def copy_branch(src, dest):
 def ensure_landing_page(dest):
     if os.path.exists(os.path.join(dest, 'index.html')):
         return
+
+    # Look for index.html files in subfolders (sites are often nested,
+    # e.g. depeyte-site/index.html). If exactly one such folder exists,
+    # redirect straight to it instead of showing an extra page list.
+    nested_index_dirs = []
+    for root, dirs, files in os.walk(dest):
+        if root != dest and 'index.html' in files:
+            nested_index_dirs.append(os.path.relpath(root, dest))
+
+    if len(nested_index_dirs) == 1:
+        target = nested_index_dirs[0].replace(os.sep, '/') + '/'
+        with open(os.path.join(dest, 'index.html'), 'w', encoding='utf-8') as f:
+            f.write(REDIRECT_TEMPLATE.format(target=target))
+        return
+
     pages = []
     for root, dirs, files in os.walk(dest):
         for f in files:
