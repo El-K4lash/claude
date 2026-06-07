@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
     lightbox.querySelector('.lightbox__prev').addEventListener('click', function () { goTo(currentSlide - 1); });
     lightbox.querySelector('.lightbox__next').addEventListener('click', function () { goTo(currentSlide + 1); });
     lightbox.addEventListener('click', function (e) {
+      if (wasDragging) { wasDragging = false; return; }
       if (e.target === lightbox) closeLightbox();
     });
 
@@ -116,13 +117,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* Swipe handling (touch + mouse drag) */
-    var startX = 0, deltaX = 0, dragging = false;
+    var startX = 0, deltaX = 0, dragging = false, wasDragging = false;
     var stage = lightbox.querySelector('.lightbox__stage');
 
     function dragStart(x) { dragging = true; startX = x; deltaX = 0; track.style.transition = 'none'; }
     function dragMove(x) {
       if (!dragging) return;
       deltaX = x - startX;
+      if (Math.abs(deltaX) > 4) wasDragging = true;
       track.style.transform = 'translateX(calc(' + (-currentSlide * 100) + '% + ' + deltaX + 'px))';
     }
     function dragEnd() {
