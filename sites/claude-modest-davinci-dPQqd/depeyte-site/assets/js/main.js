@@ -183,9 +183,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.classList.remove('lightbox-open');
   }
 
-  document.querySelectorAll('[data-gallery]').forEach(function (card) {
-    card.addEventListener('click', function (e) {
+  document.querySelectorAll('[data-gallery] .portfolio-card__action--zoom').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
       e.preventDefault();
+      e.stopPropagation();
+      var card = btn.closest('[data-gallery]');
       try {
         var images = JSON.parse(card.getAttribute('data-gallery'));
         var title = card.getAttribute('data-title') || '';
