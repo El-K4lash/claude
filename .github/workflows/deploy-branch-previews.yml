@@ -1,0 +1,44 @@
+name: Deploy branch site previews
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: branch-previews-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Build this branch's preview folder
+        run: |
+          SAFE_NAME=$(echo "${{ github.ref_name }}" | tr '/' '-')
+          mkdir -p _site/sites
+          python3 .github/scripts/prepare_branch_site.py "$GITHUB_WORKSPACE" "_site/sites/$SAFE_NAME"
+
+      - name: Build hub index listing every branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/build_hub_index.py "${{ github.repository }}" _site
+
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          keep_files: true
