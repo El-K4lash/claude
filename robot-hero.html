@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot 3D — Hero</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { overflow-x: hidden; background: #05060a; }
+  body { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; color: #e8edf5; }
+  canvas { position: fixed; top: 0; left: 0; z-index: 0; }
+
+  .scroll-container { position: relative; z-index: 1; pointer-events: none; }
+  .section { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 24px; }
+
+  .eyebrow {
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #6ee7ff;
+    opacity: 0;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(2.6rem, 7vw, 5.2rem);
+    line-height: 1.05;
+    font-weight: 700;
+    background: linear-gradient(120deg, #ffffff 10%, #8fb8ff 50%, #6ee7ff 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    opacity: 0;
+    transform: translateY(40px);
+    max-width: 14ch;
+  }
+  .sub {
+    margin-top: 22px;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: #aab4c9;
+    max-width: 46ch;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  .cta {
+    pointer-events: auto;
+    margin-top: 42px;
+    display: inline-flex;
+    gap: 14px;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .btn {
+    padding: 14px 32px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.18);
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(120deg, #6ee7ff, #7c8bff);
+    color: #06070d;
+    border: none;
+    box-shadow: 0 0 30px rgba(110, 231, 255, 0.35);
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(110,231,255,0.55); }
+  .btn-ghost { background: rgba(255,255,255,0.04); color: #e8edf5; backdrop-filter: blur(6px); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.09); transform: translateY(-3px); }
+
+  .scroll-hint {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #6c7791;
+    opacity: 0.8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .scroll-hint .line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(#6ee7ff, transparent);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(5,6,10,0) 35%, rgba(5,6,10,0.85) 100%);
+  }
+
+  .badge {
+    pointer-events: auto;
+    position: absolute;
+    bottom: 14%;
+    font-size: 0.85rem;
+    color: #8fa0c0;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px;
+    padding: 10px 22px;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="loader" style="position:fixed;inset:0;background:#05060a;z-index:50;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease;">
+  <div style="font-size:0.8rem;letter-spacing:0.4em;text-transform:uppercase;color:#6ee7ff;">Initialisation du module…</div>
+</div>
+
+<div class="vignette"></div>
+
+<div class="scroll-container">
+
+  <div class="section" id="section-1">
+    <div class="eyebrow">Système autonome // unité R-7</div>
+    <h1>L'intelligence prend forme.</h1>
+    <p class="sub">Un compagnon robotique conçu pour explorer, apprendre et s'adapter — façonné dans la lumière, animé par le mouvement.</p>
+    <div class="cta">
+      <button class="btn btn-primary">Découvrir le robot</button>
+      <button class="btn btn-ghost">Voir la démo</button>
+    </div>
+  </div>
+
+  <div class="section" id="section-2">
+    <span class="badge" id="badge-1">◎ Vision optique adaptative — capteurs à 360°</span>
+  </div>
+
+  <div class="section" id="section-3">
+    <span class="badge" id="badge-2">◎ Cœur réacteur — énergie cinétique stabilisée</span>
+  </div>
+
+  <div class="section" id="section-4">
+    <div class="eyebrow">Prêt à embarquer</div>
+    <h1 style="max-width: 12ch;">Construisons le futur, ensemble.</h1>
+    <div class="cta">
+      <button class="btn btn-primary">Lancer le module</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="scroll-hint"><span>Scroll</span><div class="line"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// ---------- Scene setup ----------
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05060a, 0.045);
+scene.background = new THREE.Color(0x05060a);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 1.4, 9);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+// ---------- Lighting ----------
+scene.add(new THREE.AmbientLight(0x404a66, 0.7));
+
+const keyLight = new THREE.DirectionalLight(0x9fc8ff, 1.1);
+keyLight.position.set(4, 6, 5);
+scene.add(keyLight);
+
+const rimLight = new THREE.PointLight(0x6ee7ff, 2.2, 30);
+rimLight.position.set(-5, 2, -3);
+scene.add(rimLight);
+
+const glowLight = new THREE.PointLight(0x7c8bff, 1.6, 20);
+glowLight.position.set(0, -1, 4);
+scene.add(glowLight);
+
+// ---------- Floating ground glow disc ----------
+const discGeo = new THREE.CircleGeometry(3.4, 64);
+const discMat = new THREE.MeshBasicMaterial({ color: 0x6ee7ff, transparent: true, opacity: 0.06 });
+const disc = new THREE.Mesh(discGeo, discMat);
+disc.rotation.x = -Math.PI / 2;
+disc.position.y = -2.6;
+scene.add(disc);
+
+const ringGeo = new THREE.RingGeometry(2.2, 2.34, 80);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0x6ee7ff, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = -Math.PI / 2;
+ring.position.y = -2.59;
+scene.add(ring);
+
+// ---------- Robot construction ----------
+const robot = new THREE.Group();
+scene.add(robot);
+
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc9d4e6, metalness: 0.85, roughness: 0.28 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x1c2230, metalness: 0.6, roughness: 0.4 });
+const accentMat = new THREE.MeshStandardMaterial({ color: 0x6ee7ff, emissive: 0x2bb6d9, emissiveIntensity: 1.4, metalness: 0.2, roughness: 0.3 });
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x9af0ff, emissive: 0x6ee7ff, emissiveIntensity: 2.2 });
+
+// Torso
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.15, 1.9, 8), bodyMat);
+torso.position.y = 0.2;
+robot.add(torso);
+
+// Chest plate / accent core
+const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.32, 0), accentMat);
+core.position.set(0, 0.45, 0.85);
+robot.add(core);
+
+const coreRing = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.03, 12, 40), accentMat);
+coreRing.position.copy(core.position);
+robot.add(coreRing);
+
+// Neck
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.3, 8), darkMat);
+neck.position.y = 1.35;
+robot.add(neck);
+
+// Head
+const head = new THREE.Group();
+head.position.y = 1.95;
+robot.add(head);
+
+const headCore = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.85, 0.95), bodyMat);
+headCore.geometry = new THREE.BoxGeometry(1.05, 0.85, 0.95);
+head.add(headCore);
+
+const visor = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.32, 0.1), darkMat);
+visor.position.set(0, 0.05, 0.49);
+head.add(visor);
+
+const eyeGeo = new THREE.SphereGeometry(0.075, 16, 16);
+const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+eyeL.position.set(-0.22, 0.05, 0.56);
+head.add(eyeL);
+const eyeR = eyeL.clone();
+eyeR.position.x = 0.22;
+head.add(eyeR);
+
+// Antenna
+const antennaStem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 6), darkMat);
+antennaStem.position.set(0, 0.7, 0);
+head.add(antennaStem);
+const antennaTip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), accentMat);
+antennaTip.position.set(0, 1.0, 0);
+head.add(antennaTip);
+
+// Side ear discs
+const earGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.08, 16);
+const earL = new THREE.Mesh(earGeo, accentMat);
+earL.rotation.z = Math.PI / 2;
+earL.position.set(-0.58, 0, 0);
+head.add(earL);
+const earR = earL.clone();
+earR.position.x = 0.58;
+head.add(earR);
+
+// Shoulders + arms
+function buildArm(side) {
+  const arm = new THREE.Group();
+  const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), darkMat);
+  arm.add(shoulder);
+
+  const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.95, 8), bodyMat);
+  upper.position.y = -0.55;
+  arm.add(upper);
+
+  const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 12), darkMat);
+  elbow.position.y = -1.05;
+  arm.add(elbow);
+
+  const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.8, 8), bodyMat);
+  lower.position.y = -1.5;
+  arm.add(lower);
+
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 12), accentMat);
+  hand.position.y = -1.95;
+  arm.add(hand);
+
+  arm.position.set(side * 1.15, 0.75, 0);
+  arm.rotation.z = side * 0.18;
+  return arm;
+}
+const armL = buildArm(-1);
+const armR = buildArm(1);
+robot.add(armL, armR);
+
+// Lower body / hover base
+const waist = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.55, 0.4, 8), darkMat);
+waist.position.y = -0.85;
+robot.add(waist);
+
+const hoverBase = new THREE.Mesh(new THREE.ConeGeometry(0.62, 0.9, 8), bodyMat);
+hoverBase.rotation.x = Math.PI;
+hoverBase.position.y = -1.55;
+robot.add(hoverBase);
+
+const hoverGlow = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.05, 12, 32), accentMat);
+hoverGlow.rotation.x = Math.PI / 2;
+hoverGlow.position.y = -1.95;
+robot.add(hoverGlow);
+
+robot.position.set(0, -0.3, 0);
+robot.scale.setScalar(0.92);
+
+// ---------- Particle field ----------
+const PARTICLE_COUNT = 700;
+const positions = new Float32Array(PARTICLE_COUNT * 3);
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  positions[i * 3 + 0] = (Math.random() - 0.5) * 40;
+  positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+}
+const particleGeo = new THREE.BufferGeometry();
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const particleMat = new THREE.PointsMaterial({
+  color: 0x9fd8ff,
+  size: 0.05,
+  transparent: true,
+  opacity: 0.55,
+  depthWrite: false
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+// Slow-drifting accent shards in background
+const shardGroup = new THREE.Group();
+const shardMat = new THREE.MeshStandardMaterial({ color: 0x2a3450, metalness: 0.7, roughness: 0.35, transparent: true, opacity: 0.5 });
+for (let i = 0; i < 10; i++) {
+  const shard = new THREE.Mesh(new THREE.OctahedronGeometry(0.25 + Math.random() * 0.4, 0), shardMat);
+  shard.position.set((Math.random() - 0.5) * 16, (Math.random() - 0.5) * 8, -6 - Math.random() * 10);
+  shard.userData.spin = (Math.random() - 0.5) * 0.01;
+  shardGroup.add(shard);
+}
+scene.add(shardGroup);
+
+// ---------- Resize ----------
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---------- Mouse parallax ----------
+const mouse = { x: 0, y: 0 };
+document.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ---------- Scroll-driven camera & robot animation ----------
+const camAnim = { x: 0, y: 1.4, z: 9, lookX: 0, lookY: 0.5, lookZ: 0 };
+const robotAnim = { rotY: 0.3, rotX: 0, posY: -0.3, scale: 0.92 };
+const fogAnim = { density: 0.045 };
+
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: '.scroll-container',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1,
+  }
+});
+
+tl.to(camAnim, { x: 0, y: 1.4, z: 9, lookX: 0, lookY: 0.5, lookZ: 0, duration: 1 })
+  .to(camAnim, { x: 2.6, y: 1.0, z: 6.2, lookX: -0.6, lookY: 0.6, lookZ: 0, duration: 1 }, '<')
+  .to(robotAnim, { rotY: Math.PI * 0.85, posY: -0.1, duration: 1 }, '<')
+  .to(camAnim, { x: -2.6, y: 0.4, z: 5.4, lookX: 0.7, lookY: 0.9, lookZ: 0, duration: 1 })
+  .to(robotAnim, { rotY: Math.PI * 1.65, rotX: 0.12, posY: 0.15, duration: 1 }, '<')
+  .to(camAnim, { x: 0, y: 1.8, z: 7.5, lookX: 0, lookY: 0.4, lookZ: 0, duration: 1 })
+  .to(robotAnim, { rotY: Math.PI * 2.2, rotX: 0, posY: -0.25, scale: 1.05, duration: 1 }, '<');
+
+// ---------- Section text reveals ----------
+function revealSection(id, delayChain) {
+  gsap.timeline({
+    scrollTrigger: { trigger: id, start: 'top 75%', end: 'top 35%', scrub: 0.6 }
+  }).to(`${id} .eyebrow`, { opacity: 1, duration: 0.4 })
+    .to(`${id} h1`, { opacity: 1, y: 0, duration: 0.6 }, '<0.05')
+    .to(`${id} .sub`, { opacity: 1, y: 0, duration: 0.6 }, '<0.1')
+    .to(`${id} .cta`, { opacity: 1, y: 0, duration: 0.5 }, '<0.1');
+}
+revealSection('#section-1');
+revealSection('#section-4');
+
+gsap.timeline({ scrollTrigger: { trigger: '#section-2', start: 'top 70%', end: 'top 40%', scrub: 0.6 } })
+  .to('#badge-1', { opacity: 1, y: 0, duration: 0.5 });
+gsap.fromTo('#badge-1', { y: 24 }, { y: 0, scrollTrigger: { trigger: '#section-2', start: 'top 70%', end: 'top 40%', scrub: 0.6 } });
+
+gsap.timeline({ scrollTrigger: { trigger: '#section-3', start: 'top 70%', end: 'top 40%', scrub: 0.6 } })
+  .to('#badge-2', { opacity: 1, y: 0, duration: 0.5 });
+gsap.fromTo('#badge-2', { y: 24 }, { y: 0, scrollTrigger: { trigger: '#section-3', start: 'top 70%', end: 'top 40%', scrub: 0.6 } });
+
+gsap.to(fogAnim, {
+  density: 0.085,
+  scrollTrigger: { trigger: '.scroll-container', start: 'top top', end: 'bottom bottom', scrub: 1 }
+});
+
+// Fade out scroll hint after first section
+gsap.to('.scroll-hint', {
+  opacity: 0,
+  scrollTrigger: { trigger: '#section-1', start: 'bottom 90%', end: 'bottom 60%', scrub: true }
+});
+
+// ---------- Render loop ----------
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  // Apply scroll-driven camera
+  camera.position.set(
+    camAnim.x + mouse.x * 0.4,
+    camAnim.y - mouse.y * 0.2,
+    camAnim.z
+  );
+  camera.lookAt(camAnim.lookX, camAnim.lookY, camAnim.lookZ);
+
+  // Robot transforms (scroll-driven base + idle motion)
+  robot.rotation.y = robotAnim.rotY + Math.sin(t * 0.4) * 0.05;
+  robot.rotation.x = robotAnim.rotX;
+  robot.position.y = robotAnim.posY + Math.sin(t * 1.2) * 0.08;
+  robot.scale.setScalar(robotAnim.scale);
+
+  // Eye & core pulse
+  const pulse = 1.6 + Math.sin(t * 3) * 0.6;
+  eyeMat.emissiveIntensity = pulse;
+  accentMat.emissiveIntensity = 1.2 + Math.sin(t * 2.4) * 0.5;
+  hoverGlow.rotation.z = t * 1.4;
+  ring.material.opacity = 0.35 + Math.sin(t * 1.5) * 0.15;
+  coreRing.rotation.x = t * 0.6;
+  coreRing.rotation.y = t * 0.4;
+
+  // Fog density
+  scene.fog.density = fogAnim.density;
+
+  // Particle drift
+  particles.rotation.y = t * 0.015;
+  particles.rotation.x = Math.sin(t * 0.05) * 0.05;
+
+  // Shard drift/spin
+  shardGroup.children.forEach((s) => {
+    s.rotation.x += s.userData.spin;
+    s.rotation.y += s.userData.spin * 1.3;
+  });
+  shardGroup.position.y = Math.sin(t * 0.2) * 0.4;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// Hide loader once ready
+window.addEventListener('load', () => {
+  const loader = document.getElementById('loader');
+  loader.style.opacity = '0';
+  setTimeout(() => loader.remove(), 650);
+});
+</script>
+</body>
+</html>
