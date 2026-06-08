@@ -258,6 +258,13 @@ p { margin: 0 0 16px; color: var(--c-text); }
 }
 .hero__dots button.is-active { background: var(--c-accent); }
 
+@media (max-width: 640px) {
+  .hero { height: auto; min-height: 0; padding-bottom: 80px; }
+  .hero__content { height: auto; padding: 150px 20px 0; }
+  .hero__cta { margin-bottom: 12px; }
+  .hero__dots { bottom: 26px; }
+}
+
 /* page header (sub-pages) */
 .page-hero {
   background: linear-gradient(135deg, var(--c-dark) 0%, var(--c-blue) 100%);

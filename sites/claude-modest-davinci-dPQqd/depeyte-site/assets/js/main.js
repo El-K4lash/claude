@@ -116,9 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
     lightbox.className = 'lightbox';
     lightbox.innerHTML =
       '<button class="lightbox__close" aria-label="Fermer la galerie"><i class="fa-solid fa-xmark"></i></button>' +
-      '<button class="lightbox__nav lightbox__prev" aria-label="Image précédente"><i class="fa-solid fa-chevron-left"></i></button>' +
-      '<button class="lightbox__nav lightbox__next" aria-label="Image suivante"><i class="fa-solid fa-chevron-right"></i></button>' +
-      '<div class="lightbox__stage"><div class="lightbox__track"></div></div>' +
+      '<div class="lightbox__stage">' +
+        '<button class="lightbox__nav lightbox__prev" aria-label="Image précédente"><i class="fa-solid fa-chevron-left"></i></button>' +
+        '<button class="lightbox__nav lightbox__next" aria-label="Image suivante"><i class="fa-solid fa-chevron-right"></i></button>' +
+        '<div class="lightbox__track"></div>' +
+      '</div>' +
       '<div class="lightbox__footer">' +
         '<h3 class="lightbox__title"></h3>' +
         '<div class="lightbox__counter"></div>' +
