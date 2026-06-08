@@ -79,6 +79,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ---- Gallery lightbox (swipeable) ---- */
   var lightbox, track, titleEl, counterEl, dotsEl, slideCount, currentSlide;
+  var MAX_ZOOM = 3.5, ZOOM_STEP = 2.4;
+  var zoomScale = 1, zoomPanX = 0, zoomPanY = 0;
+
+  function activeSlideImg() {
+    var slide = track && track.children[currentSlide];
+    return slide ? slide.querySelector('img') : null;
+  }
+  function applyZoom(animate) {
+    var img = activeSlideImg();
+    if (!img) return;
+    img.style.transition = animate ? 'transform .25s ease' : 'none';
+    img.style.transform = 'translate(' + zoomPanX + 'px,' + zoomPanY + 'px) scale(' + zoomScale + ')';
+    lightbox.classList.toggle('is-zoomed', zoomScale > 1);
+  }
+  function clampZoomPan() {
+    var img = activeSlideImg();
+    if (!img) return;
+    var maxX = (img.clientWidth * (zoomScale - 1)) / 2;
+    var maxY = (img.clientHeight * (zoomScale - 1)) / 2;
+    zoomPanX = Math.max(-maxX, Math.min(maxX, zoomPanX));
+    zoomPanY = Math.max(-maxY, Math.min(maxY, zoomPanY));
+  }
+  function resetZoom(animate) {
+    zoomScale = 1; zoomPanX = 0; zoomPanY = 0;
+    applyZoom(animate);
+  }
+  function zoomToggle() {
+    if (zoomScale > 1) { resetZoom(true); }
+    else { zoomScale = ZOOM_STEP; clampZoomPan(); applyZoom(true); }
+  }
 
   function buildLightbox() {
     if (lightbox) return;
@@ -116,13 +146,32 @@ document.addEventListener('DOMContentLoaded', function () {
       if (e.key === 'ArrowRight') goTo(currentSlide + 1);
     });
 
-    /* Swipe handling (touch + mouse drag) */
+    /* Swipe + zoom handling (touch + mouse drag) */
     var startX = 0, deltaX = 0, dragging = false, wasDragging = false;
     var stage = lightbox.querySelector('.lightbox__stage');
+    var panning = false, panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
+    var pinching = false, pinchStartDist = 0, pinchStartScale = 1;
 
-    function dragStart(x) { dragging = true; startX = x; deltaX = 0; track.style.transition = 'none'; }
-    function dragMove(x) {
+    function touchDist(touches) {
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function dragStart(x, y) {
+      dragging = true; startX = x; deltaX = 0; track.style.transition = 'none';
+      if (zoomScale > 1) { panning = true; panStartX = x; panStartY = y; panOriginX = zoomPanX; panOriginY = zoomPanY; }
+    }
+    function dragMove(x, y) {
       if (!dragging) return;
+      if (panning) {
+        zoomPanX = panOriginX + (x - panStartX);
+        zoomPanY = panOriginY + (y - panStartY);
+        clampZoomPan();
+        if (Math.abs(x - panStartX) > 4 || Math.abs(y - panStartY) > 4) wasDragging = true;
+        applyZoom(false);
+        return;
+      }
       deltaX = x - startX;
       if (Math.abs(deltaX) > 4) wasDragging = true;
       track.style.transform = 'translateX(calc(' + (-currentSlide * 100) + '% + ' + deltaX + 'px))';
@@ -130,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function dragEnd() {
       if (!dragging) return;
       dragging = false;
+      if (panning) { panning = false; return; }
       track.style.transition = '';
       var threshold = stage.clientWidth * 0.15;
       if (deltaX > threshold) goTo(currentSlide - 1);
@@ -137,16 +187,63 @@ document.addEventListener('DOMContentLoaded', function () {
       else goTo(currentSlide);
     }
 
-    stage.addEventListener('touchstart', function (e) { dragStart(e.touches[0].clientX); }, { passive: true });
-    stage.addEventListener('touchmove', function (e) { dragMove(e.touches[0].clientX); }, { passive: true });
-    stage.addEventListener('touchend', dragEnd);
+    stage.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 2) {
+        pinching = true; dragging = false; panning = false;
+        pinchStartDist = touchDist(e.touches);
+        pinchStartScale = zoomScale;
+      } else if (e.touches.length === 1) {
+        pinching = false;
+        dragStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    stage.addEventListener('touchmove', function (e) {
+      if (pinching && e.touches.length === 2) {
+        var dist = touchDist(e.touches);
+        zoomScale = Math.max(1, Math.min(MAX_ZOOM, pinchStartScale * (dist / pinchStartDist)));
+        clampZoomPan();
+        applyZoom(false);
+        wasDragging = true;
+      } else if (e.touches.length === 1 && !pinching) {
+        dragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    stage.addEventListener('touchend', function (e) {
+      if (pinching) {
+        if (e.touches.length < 2) {
+          pinching = false;
+          if (zoomScale <= 1.05) resetZoom(true);
+        }
+        return;
+      }
+      dragEnd();
+    });
 
-    stage.addEventListener('mousedown', function (e) { e.preventDefault(); dragStart(e.clientX); });
-    window.addEventListener('mousemove', function (e) { if (dragging) dragMove(e.clientX); });
+    stage.addEventListener('mousedown', function (e) { e.preventDefault(); dragStart(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', function (e) { if (dragging) dragMove(e.clientX, e.clientY); });
     window.addEventListener('mouseup', dragEnd);
+
+    /* Click / tap on the image toggles zoom */
+    track.addEventListener('click', function (e) {
+      if (wasDragging) { wasDragging = false; return; }
+      var img = e.target.closest('img');
+      if (!img) return;
+      e.stopPropagation();
+      zoomToggle();
+    });
+
+    /* Mouse wheel zoom (desktop) */
+    stage.addEventListener('wheel', function (e) {
+      if (!activeSlideImg()) return;
+      e.preventDefault();
+      var prev = zoomScale;
+      zoomScale = Math.max(1, Math.min(MAX_ZOOM, zoomScale - e.deltaY * 0.0025));
+      if (zoomScale !== prev) { clampZoomPan(); applyZoom(false); }
+    }, { passive: false });
   }
 
   function goTo(index) {
+    if (lightbox) resetZoom(false);
     currentSlide = (index + slideCount) % slideCount;
     track.style.transform = 'translateX(' + (-currentSlide * 100) + '%)';
     counterEl.textContent = (currentSlide + 1) + ' / ' + slideCount;
@@ -155,14 +252,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  function openLightbox(images, title) {
+  function openLightbox(images, title, startIndex) {
     buildLightbox();
     track.innerHTML = '';
     dotsEl.innerHTML = '';
     images.forEach(function (img, i) {
       var slide = document.createElement('div');
       slide.className = 'lightbox__slide';
-      slide.innerHTML = '<img src="' + img.src + '" alt="' + (img.alt || title || '') + '" loading="lazy">';
+      slide.innerHTML = '<img src="' + img.src + '" alt="' + (img.alt || title || '') + '" loading="lazy" draggable="false">';
       track.appendChild(slide);
 
       var dot = document.createElement('button');
@@ -174,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
     titleEl.textContent = title || '';
     document.body.classList.add('lightbox-open');
     lightbox.classList.add('is-open');
-    goTo(0);
+    goTo(startIndex || 0);
   }
 
   function closeLightbox() {
@@ -227,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
     images.forEach(function (img, i) {
       var slide = document.createElement('div');
       slide.className = 'project-gallery__slide';
-      slide.innerHTML = '<img src="' + img.src + '" alt="' + (img.alt || '') + '" loading="lazy">';
+      slide.innerHTML = '<img src="' + img.src + '" alt="' + (img.alt || '') + '" loading="lazy" draggable="false">';
       track.appendChild(slide);
 
       if (dots) {
@@ -250,12 +347,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (prevBtn) prevBtn.addEventListener('click', function () { go(current - 1); });
     if (nextBtn) nextBtn.addEventListener('click', function () { go(current + 1); });
 
+    var wasDragging = false;
     if (total > 1) {
       var startX = 0, deltaX = 0, dragging = false;
       function dragStart(x) { dragging = true; startX = x; deltaX = 0; track.style.transition = 'none'; }
       function dragMove(x) {
         if (!dragging) return;
         deltaX = x - startX;
+        if (Math.abs(deltaX) > 4) wasDragging = true;
         track.style.transform = 'translateX(calc(' + (-current * 100) + '% + ' + deltaX + 'px))';
       }
       function dragEnd() {
@@ -274,6 +373,14 @@ document.addEventListener('DOMContentLoaded', function () {
       window.addEventListener('mousemove', function (e) { if (dragging) dragMove(e.clientX); });
       window.addEventListener('mouseup', dragEnd);
     }
+
+    /* Click image to open the fullscreen, zoomable lightbox */
+    track.addEventListener('click', function (e) {
+      if (wasDragging) { wasDragging = false; return; }
+      if (!e.target.closest('img')) return;
+      var title = (images[0] && images[0].alt) || '';
+      openLightbox(images, title, current);
+    });
 
     go(0);
   });
