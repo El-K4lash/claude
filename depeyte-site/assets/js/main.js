@@ -400,4 +400,30 @@ document.addEventListener('DOMContentLoaded', function () {
       form.reset();
     });
   }
+
+  /* Cookie consent banner */
+  if (!localStorage.getItem('depeyte-cookie-consent')) {
+    var banner = document.createElement('div');
+    banner.className = 'cookie-banner';
+    banner.innerHTML =
+      '<div class="cookie-banner__card">' +
+        '<img src="assets/img/logo-depeyte.png" alt="Depeyte Constructions" class="cookie-banner__logo">' +
+        '<p class="cookie-banner__title">Gestion <strong>des Cookies !</strong></p>' +
+        '<p class="cookie-banner__text">Depeyte Constructions utilise des cookies nécessaires au bon fonctionnement du site. D\'autres catégories de cookies peuvent être utilisées pour personnaliser, réaliser des analyses, afin d\'optimiser notre offre. Votre consentement peut être retiré à tout moment depuis cette fenêtre.</p>' +
+        '<div class="cookie-banner__actions">' +
+          '<button type="button" class="cookie-banner__btn" data-choice="refuse">Non merci</button>' +
+          '<button type="button" class="cookie-banner__btn" data-choice="choose">Je choisis</button>' +
+          '<button type="button" class="cookie-banner__btn cookie-banner__btn--accent" data-choice="accept">OK pour moi</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(banner);
+    requestAnimationFrame(function () { banner.classList.add('is-visible'); });
+    banner.querySelectorAll('[data-choice]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        localStorage.setItem('depeyte-cookie-consent', btn.getAttribute('data-choice'));
+        banner.classList.remove('is-visible');
+        setTimeout(function () { banner.remove(); }, 300);
+      });
+    });
+  }
 });

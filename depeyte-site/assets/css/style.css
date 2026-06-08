@@ -916,3 +916,56 @@ body.lightbox-open { overflow: hidden; }
   transition: background .2s, transform .2s;
 }
 .project-gallery__dots button.is-active { background: var(--c-accent); transform: scale(1.25); }
+
+/* ---------- Cookie consent banner ---------- */
+.cookie-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 24px;
+  pointer-events: none;
+  background: rgba(15, 22, 25, 0);
+  transition: background .3s ease;
+}
+.cookie-banner.is-visible { pointer-events: auto; background: rgba(15, 22, 25, .25); }
+.cookie-banner__card {
+  pointer-events: auto;
+  background: #fff;
+  color: var(--c-dark);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-width: 360px;
+  width: 100%;
+  padding: 26px 26px 18px;
+  transform: translateY(40px);
+  opacity: 0;
+  transition: transform .35s ease, opacity .35s ease;
+}
+.cookie-banner.is-visible .cookie-banner__card { transform: translateY(0); opacity: 1; }
+.cookie-banner__logo { width: 64px; height: auto; float: right; margin-left: 14px; }
+.cookie-banner__title { font-size: 1.2rem; margin: 0 0 12px; }
+.cookie-banner__title strong { display: block; font-size: 1.35rem; }
+.cookie-banner__text { font-size: .86rem; line-height: 1.6; color: #4d5b5f; margin: 0 0 18px; clear: both; }
+.cookie-banner__actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 -26px -18px; border-top: 1px solid #e7ecec; }
+.cookie-banner__btn {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: var(--c-dark);
+  font-size: .82rem;
+  font-weight: 600;
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.cookie-banner__btn:not(:last-child) { border-right: 1px solid #e7ecec; }
+.cookie-banner__btn:hover { background: #f3f6f6; }
+.cookie-banner__btn--accent { background: var(--c-accent); color: var(--c-dark); }
+.cookie-banner__btn--accent:hover { background: var(--c-accent-dark); }
+@media (max-width: 480px) {
+  .cookie-banner { padding: 0; align-items: flex-end; }
+  .cookie-banner__card { max-width: none; border-radius: var(--radius) var(--radius) 0 0; }
+}
