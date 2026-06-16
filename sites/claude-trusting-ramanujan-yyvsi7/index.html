@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur Bac — Hugo</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;padding:20px;min-height:100vh}
+  h1{font-size:20px;font-weight:600;margin-bottom:20px;color:#1a1a1a}
+  .card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0ec;font-size:13px}
+  .row:last-child{border-bottom:none}
+  .label{color:#666;flex:1}
+  .coef{color:#aaa;font-size:11px;margin:0 12px;min-width:44px;text-align:center}
+  .note input{width:64px;text-align:center;font-size:13px;font-weight:500;padding:3px 6px;border:1px solid #ddd;border-radius:6px;background:#fafaf8}
+  .note input:focus{outline:none;border-color:#378ADD}
+  .note-fixed{font-weight:500;font-size:13px;min-width:40px;text-align:right}
+  .section-title{font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;padding:8px 0 6px;border-bottom:1px solid #eee;margin-bottom:4px}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
+  .metric{background:#f5f5f0;border-radius:8px;padding:12px;text-align:center}
+  .metric-label{font-size:10px;color:#888;margin-bottom:4px}
+  .metric-value{font-size:22px;font-weight:600}
+  .bar-wrap{background:#eee;border-radius:99px;height:8px;overflow:hidden;margin-top:14px}
+  .bar{height:8px;border-radius:99px;transition:width 0.4s ease}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600;margin-top:4px}
+  .tag-green{background:#EAF3DE;color:#3B6D11}
+  .tag-red{background:#FCEBEB;color:#A32D2D}
+  .tag-amber{background:#FAEEDA;color:#854F0B}
+  .tag-blue{background:#E6F1FB;color:#185FA5}
+  .tag-purple{background:#EEEDFE;color:#534AB7}
+  .summary-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0ec;font-size:13px}
+  .summary-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<h1>Simulateur Bac STI2D — Hugo</h1>
+
+<div class="card">
+  <div class="section-title">Épreuves terminales (60% du bac)</div>
+  <div class="row">
+    <span class="label">Philosophie</span>
+    <span class="coef">coef 4</span>
+    <span class="note"><input type="number" id="philo" value="12" min="0" max="20" step="0.5" oninput="calc()"></span>
+  </div>
+  <div class="row">
+    <span class="label">PCM écrit</span>
+    <span class="coef">coef 9</span>
+    <span class="note"><input type="number" id="pcm" value="8" min="0" max="20" step="0.5" oninput="calc()"></span>
+  </div>
+  <div class="row">
+    <span class="label">SIN écrit</span>
+    <span class="coef">coef 9</span>
+    <span class="note"><input type="number" id="sin_ecrit" value="12" min="0" max="20" step="0.5" oninput="calc()"></span>
+  </div>
+  <div class="row">
+    <span class="label">SIN pratique</span>
+    <span class="coef">coef 7</span>
+    <span class="note"><input type="number" id="sin_pratique" value="14" min="0" max="20" step="0.5" oninput="calc()"></span>
+  </div>
+  <div class="row">
+    <span class="label">Grand Oral</span>
+    <span class="coef">coef 14</span>
+    <span class="note"><input type="number" id="go" value="13" min="0" max="20" step="0.5" oninput="calc()"></span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="section-title">Contrôle continu — bulletins (40% du bac)</div>
+  <div class="row"><span class="label">2I2D / SIN (moy. année)</span><span class="coef">coef 16</span><span class="note-fixed">12.58</span></div>
+  <div class="row"><span class="label">PCM (moy. année)</span><span class="coef">coef 6</span><span class="note-fixed">9.98</span></div>
+  <div class="row"><span class="label">Philosophie (moy. année)</span><span class="coef">coef 2</span><span class="note-fixed">14.24</span></div>
+  <div class="row"><span class="label">Mathématiques (moy. année)</span><span class="coef">coef 6</span><span class="note-fixed">11.97</span></div>
+  <div class="row"><span class="label">Histoire-Géographie (moy. année)</span><span class="coef">coef 3</span><span class="note-fixed">14.17</span></div>
+  <div class="row"><span class="label">Anglais LV1 (moy. année)</span><span class="coef">coef 3</span><span class="note-fixed">11.94</span></div>
+  <div class="row"><span class="label">Italien LV2 (moy. année)</span><span class="coef">coef 2</span><span class="note-fixed">12.60</span></div>
+  <div class="row"><span class="label">EPS (moy. année)</span><span class="coef">coef 2</span><span class="note-fixed">12.17</span></div>
+  <div class="row"><span class="label">EMC (moy. année)</span><span class="coef">coef 1</span><span class="note-fixed">17.00</span></div>
+  <div class="row"><span class="label">Français écrit (1ère)</span><span class="coef">coef 5</span><span class="note-fixed">14.00</span></div>
+  <div class="row"><span class="label">Français oral (1ère)</span><span class="coef">coef 5</span><span class="note-fixed">11.00</span></div>
+  <div class="row"><span class="label">Innovation technologique (1ère)</span><span class="coef">coef 2</span><span class="note-fixed">16.70</span></div>
+</div>
+
+<div class="card" id="results"></div>
+
+<script>
+function calc(){
+  const philo=parseFloat(document.getElementById('philo').value)||0;
+  const pcm=parseFloat(document.getElementById('pcm').value)||0;
+  const sin_ecrit=parseFloat(document.getElementById('sin_ecrit').value)||0;
+  const sin_pratique=parseFloat(document.getElementById('sin_pratique').value)||0;
+  const go=parseFloat(document.getElementById('go').value)||0;
+
+  const terminales=[{n:philo,c:4},{n:pcm,c:9},{n:sin_ecrit,c:9},{n:sin_pratique,c:7},{n:go,c:14}];
+  const cc=[{n:12.58,c:16},{n:9.98,c:6},{n:14.24,c:2},{n:11.97,c:6},{n:14.17,c:3},{n:11.94,c:3},{n:12.60,c:2},{n:12.17,c:2},{n:17.00,c:1},{n:14.00,c:5},{n:11.00,c:5},{n:16.70,c:2}];
+
+  let sum_t=0,coef_t=0;
+  terminales.forEach(x=>{sum_t+=x.n*x.c;coef_t+=x.c});
+  const moy_t=sum_t/coef_t;
+
+  let sum_cc=0,coef_cc=0;
+  cc.forEach(x=>{sum_cc+=x.n*x.c;coef_cc+=x.c});
+  const moy_cc=sum_cc/coef_cc;
+
+  const final=moy_t*0.6+moy_cc*0.4;
+  const pts=Math.round(final*100);
+
+  let mention='',mcolor='';
+  if(final<10){mention='Recalé';mcolor='tag-red';}
+  else if(final<12){mention='Passable';mcolor='tag-blue';}
+  else if(final<14){mention='Mention AB';mcolor='tag-green';}
+  else if(final<16){mention='Mention Bien';mcolor='tag-amber';}
+  else{mention='Mention TB';mcolor='tag-purple';}
+
+  const pct=Math.min(100,Math.round(final/20*100));
+  const barColor=final>=16?'#7F77DD':final>=14?'#1D9E75':final>=12?'#EF9F27':final>=10?'#378ADD':'#E24B4A';
+
+  const m_bac=Math.max(0,1000-pts);
+  const m_ab=Math.max(0,1200-pts);
+  const m_b=Math.max(0,1400-pts);
+  const m_tb=Math.max(0,1600-pts);
+
+  document.getElementById('results').innerHTML=`
+    <div class="section-title">Résultat simulé</div>
+    <div class="result-grid">
+      <div class="metric"><div class="metric-label">Moy. épreuves</div><div class="metric-value">${moy_t.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">Moy. CC</div><div class="metric-value">${moy_cc.toFixed(2)}</div></div>
+      <div class="metric"><div class="metric-label">Note finale</div><div class="metric-value" style="color:${barColor}">${final.toFixed(2)}</div><div><span class="tag ${mcolor}">${mention}</span></div></div>
+    </div>
+    <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${barColor}"></div></div>
+    <div style="margin-top:14px">
+      <div class="summary-row"><span class="label">Points simulés</span><b>${pts} / 2000</b></div>
+      <div class="summary-row"><span class="label">Bac (≥ 1000 pts)</span><b style="color:${m_bac===0?'#3B6D11':'#A32D2D'}">${m_bac===0?'✓ Obtenu !':'Il manque '+m_bac+' pts'}</b></div>
+      <div class="summary-row"><span class="label">Mention AB (≥ 1200 pts)</span><b style="color:${m_ab===0?'#3B6D11':'#854F0B'}">${m_ab===0?'✓ Obtenu !':'Il manque '+m_ab+' pts'}</b></div>
+      <div class="summary-row"><span class="label">Mention Bien (≥ 1400 pts)</span><b style="color:${m_b===0?'#3B6D11':'#888'}">${m_b===0?'✓ Obtenu !':'Il manque '+m_b+' pts'}</b></div>
+      <div class="summary-row"><span class="label">Mention TB (≥ 1600 pts)</span><b style="color:${m_tb===0?'#534AB7':'#888'}">${m_tb===0?'✓ Obtenu !':'Il manque '+m_tb+' pts'}</b></div>
+    </div>
+  `;
+}
+calc();
+</script>
+</body>
+</html>
